@@ -1,50 +1,44 @@
-import os
-import logging
-import pandas as pd
 import functions_framework
-from flask import jsonify, make_response
+import pandas as pd
+import logging
+from flask import make_response
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('gcs_triggered_function_logger')
 logger.setLevel(logging.INFO)
-if not logger.handlers:
-    h = logging.StreamHandler()
-    h.setFormatter(logging.Formatter(
-        "%(asctime)s %(levelname)s %(name)s: %(message)s"
-    ))
-    logger.addHandler(h)
 
-
+# Triggered by a change in a storage bucket
 @functions_framework.cloud_event
-def gcs_trigger_process(cloud_event):
-    """
-    Triggered by a GCS finalize (object create) event.
-    Only processes CSVs under the 'raw_data/' prefix.
-    """
+def hello_gcs(cloud_event):
     data = cloud_event.data
-    bucket = data.get("bucket")
-    name = data.get("name")
 
-    # 1 Filter by folder & extension
-    if not name.startswith("raw_data/"):
-        logger.info("Skipping object not in raw_data/: %s", name)
-        return make_response(("Ignored non-raw_data path", 204))
-    if not name.lower().endswith(".csv"):
-        logger.warning("Skipping non-CSV object: %s", name)
-        return make_response(("Ignored non-CSV file", 204))
+    event_id = cloud_event["id"]
+    event_type = cloud_event["type"]
 
-    # 2 Build GCS URI and read
-    uri = f"gs://{bucket}/{name}"
-    try:
-        logger.info("Reading CSV from %s", uri)
-        df = pd.read_csv(uri)
-    except Exception as e:
-        logger.error("Failed to read CSV %s: %s", uri, e, exc_info=True)
-        return make_response((f"Error reading CSV: {e}", 500))
+    bucket = data["bucket"]
+    name = data["name"]
+    metageneration = data["metageneration"]
+    timeCreated = data["timeCreated"]
+    updated = data["updated"]
 
-    # 3 Log a sample and count
-    logger.info("Data sample:\n%s", df.head().to_string())
-    record_count = len(df)
-    logger.info("Total records read from %s: %d", name, record_count)
+    print(f"Event ID: {event_id}")
+    print(f"Event type: {event_type}")
+    print(f"Bucket: {bucket}")
+    print(f"File: {name}")
+    print(f"Metageneration: {metageneration}")
+    print(f"Created: {timeCreated}")
+    print(f"Updated: {updated}")
 
-    # 4 Return JSON with count
-    return make_response(jsonify({"record_count": record_count}), 200)
+    if '.csv' in name:
+        print('Recived CSV file write more code here')
+        uri = f"gs://{bucket}/{name}"
+        try:
+            logger.info("Reading CSV from %s", uri)
+            df = pd.read_csv(uri)
+            print(df.head())
+            logger.info("Successfully read CSV from %s", uri)
+                        
+        except Exception as e:
+            logger.error("Failed to read CSV %s: %s", uri, e, exc_info=True)
+            return make_response((f"Error reading CSV: {e}", 500))
+    else:
+        return make_response('Did Not Recived CSV file handle exception', 204)
