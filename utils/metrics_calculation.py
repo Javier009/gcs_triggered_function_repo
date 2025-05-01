@@ -19,17 +19,25 @@ def data_metric_count(df):
 
 def upload_shape_to_gcs_trigger(bucket_name, file_name, json_object):
     """Cloud Storage trigger function to upload DataFrame shape as JSON."""
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob_name = f'{file_name}_shape.json'
+    blob = bucket.blob(blob_name)
+
     try:
-        #  uri = 'gs://{bucket_name}/{file_name}.json'
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        blob_name = f'{file_name}_shape.json'
-        blob = bucket.blob(blob_name)
+        if not bucket.exists():
+            try:
+                bucket.create(location="US")
+                print(f"Bucket '{bucket_name}' created in US.")
+            except Exception as create_error:
+                print(f"Error creating bucket '{bucket_name}': {create_error}")
+                return  # Exit the function if bucket creation fails
+
         blob.upload_from_string(json_object, content_type='application/json')
-        print(f"Shape uploaded to: gs://{bucket_name}/f'{blob_name}")
+        print(f"Shape uploaded to: gs://{bucket_name}/{blob_name}")
 
     except Exception as e:
-        print(f"Error processing file: {e}")
+        print(f"Error uploading shape to GCS: {e}")
     
 
     

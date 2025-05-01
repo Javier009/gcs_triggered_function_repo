@@ -37,20 +37,21 @@ def gcs_function_trigger(cloud_event):
             df = pd.read_csv(uri)
             print(df.head())
             logger.info("Successfully read CSV from %s", uri)
+
+            # Get shape of data frame in JSON format and store in bucket with same file name but .JSON
+            try:
+                data_shape_json = data_metric_count(df)
+                # Upload JSON file to GCS
+                upload_shape_to_gcs_trigger('gcs_trigger_function_report', name, data_shape_json)
+                logger.info('Succesfully proceesed CSV data and uploaded JSON file with data summary')
+                return make_response('File prioceesed succesfuly', 200)
+            
+            except Exception as e:
+                return make_response((f"Error transofrming to JSON and uploading to GCS: {e}", 500))
                         
         except Exception as e:
             logger.error("Failed to read CSV %s: %s", uri, e, exc_info=True)
             return make_response((f"Error reading CSV: {e}", 500))
         
-        # Get shape of data frame in JSON format and store in bucket with same file name but .JSON
-        # try:
-        #     data_shape_json = data_metric_count(df)
-        #     # Upload JSON file to GCS
-        #     upload_shape_to_gcs_trigger(bucket, name, data_shape_json)
-        #     logger.info('Succesfully proceesed CSV data and uploaded JSON file with data summary')
-        #     return make_response('File prioceesed succesfuly', 200)
-        
-        # except Exception as e:
-        #     return make_response((f"Error transofrming to JSON and uploading to GCS: {e}", 500))
     else:
         return make_response('Did Not Recived CSV file handle exception', 204)
