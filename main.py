@@ -8,7 +8,7 @@ logger.setLevel(logging.INFO)
 
 # Triggered by a change in a storage bucket
 @functions_framework.cloud_event
-def hello_gcs(cloud_event):
+def gcs_function_trigger(cloud_event):
     data = cloud_event.data
 
     event_id = cloud_event["id"]
