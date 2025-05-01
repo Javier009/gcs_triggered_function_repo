@@ -3,3 +3,4 @@ pandas
 Flask
 fsspec
 gcsfs
+google-cloud-storage

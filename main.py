@@ -44,7 +44,7 @@ def gcs_function_trigger(cloud_event):
         
         # Get shape of data frame in JSON format and store in bucket with same file name but .JSON
         try:
-            data_shape_json = data_metric_count()
+            data_shape_json = data_metric_count(df)
             # Upload JSON file to GCS
             upload_shape_to_gcs_trigger(bucket, name, data_shape_json)
             logger.info('Succesfully proceesed CSV data and uploaded JSON file with data summary')
