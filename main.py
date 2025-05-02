@@ -42,7 +42,7 @@ def gcs_function_trigger(cloud_event):
             try:
                 data_shape_json = data_metric_count(df)
                 # Upload JSON file to GCS
-                upload_shape_to_gcs_trigger('gcs_trigger_function_report', name, data_shape_json)
+                upload_shape_to_gcs_trigger('gcs_trigger_function_report', name.replace('.csv', ''), data_shape_json)
                 logger.info('Succesfully proceesed CSV data and uploaded JSON file with data summary')
                 return make_response('File prioceesed succesfuly', 200)
             
